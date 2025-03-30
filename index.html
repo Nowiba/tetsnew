@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Send Message to Telegram</title>
+</head>
+<body>
+  <h1>Send a Message to Telegram</h1>
+  <form id="messageForm">
+    <label for="message">Enter your message:</label>
+    <input type="text" id="message" name="message" placeholder="Type your message here" required>
+    <button type="submit">Send Message</button>
+  </form>
+
+  <script>
+    // Add event listener to form submission
+    const form = document.getElementById('messageForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Collect form data
+      const formData = new FormData(form);
+
+      // Send data to Cloudflare Worker (replace with your Worker URL)
+      const response = await fetch('https://your-worker-subdomain.workers.dev', {
+        method: 'POST',
+        body: formData,
+      });
+
+      // Handle response from Cloudflare Worker
+      if (response.ok) {
+        alert('Message sent successfully!');
+      } else {
+        alert('Failed to send message.');
+      }
+    });
+  </script>
+</body>
+</html>
