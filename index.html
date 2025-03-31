@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rate Us!</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
-    .stars { display: flex; justify-content: center; margin: 20px 0; }
-    .star { font-size: 30px; cursor: pointer; color: #ddd; }
-    .star.active { color: #ffcc00; }
-    textarea { width: 100%; padding: 10px; margin: 10px 0; }
-    button { background: #0078d7; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    .stars { font-size: 40px; margin: 20px; }
+    .star { cursor: pointer; color: #ddd; }
+    .star.active, .star:hover { color: #ffcc00; }
+    textarea { width: 80%; height: 100px; margin: 10px; padding: 10px; }
+    button { background: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>Rate Your Experience</h1>
+  <h1>How would you rate us?</h1>
   <div class="stars">
     <span class="star" data-rating="1">★</span>
     <span class="star" data-rating="2">★</span>
@@ -22,8 +20,8 @@
     <span class="star" data-rating="4">★</span>
     <span class="star" data-rating="5">★</span>
   </div>
-  <textarea id="feedback" placeholder="Optional feedback..."></textarea>
-  <button id="submit">Submit Rating</button>
+  <textarea id="feedback" placeholder="Your feedback (optional)"></textarea>
+  <button id="submit">Submit</button>
 
   <script>
     let selectedRating = 0;
@@ -31,7 +29,7 @@
     const feedback = document.getElementById('feedback');
     const submitBtn = document.getElementById('submit');
 
-    // Star selection logic
+    // Star selection
     stars.forEach(star => {
       star.addEventListener('click', () => {
         selectedRating = star.dataset.rating;
@@ -39,27 +37,31 @@
       });
     });
 
-    // Send data to Cloudflare Worker
+    // Submit to Cloudflare Worker
     submitBtn.addEventListener('click', async () => {
       if (selectedRating === 0) {
-        alert('Please select a rating!');
+        alert("Please select a rating!");
         return;
       }
 
-      const response = await fetch('https://your-worker.your-username.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rating: selectedRating,
-          feedback: feedback.value,
-          userAgent: navigator.userAgent // Optional: Detect browser/device
-        }),
-      });
+      try {
+        const response = await fetch("https://your-worker.your-username.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            rating: selectedRating,
+            feedback: feedback.value,
+            page: window.location.href
+          }),
+        });
 
-      if (response.ok) {
-        alert('Thanks for your feedback!');
-      } else {
-        alert('Error sending feedback. Try again later.');
+        if (response.ok) {
+          alert("Thank you for your feedback! 💖");
+        } else {
+          alert("Failed to submit. Try again later.");
+        }
+      } catch (error) {
+        alert("Network error. Check your connection.");
       }
     });
   </script>
