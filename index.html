@@ -292,184 +292,169 @@
         <span id="toastMessage">Feedback submitted successfully!</span>
     </div>
 
-    <script>
-        // Generate a client fingerprint
-        function generateFingerprint() {
-            const keys = [
-                navigator.userAgent,
-                navigator.platform,
-                screen.width,
-                screen.height,
-                navigator.language,
-                new Date().getTimezoneOffset(),
-                Math.random().toString(36).substring(2)
-            ];
-            return btoa(keys.join('|')).slice(0, 32);
-        }
+  <script>
+    // Generate a client fingerprint
+    function generateFingerprint() {
+        const keys = [
+            navigator.userAgent,
+            navigator.platform,
+            screen.width,
+            screen.height,
+            navigator.language,
+            new Date().getTimezoneOffset(),
+            Math.random().toString(36).substring(2)
+        ];
+        return btoa(keys.join('|')).slice(0, 32);
+    }
 
-        // Validate email format
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    // Initialize the form
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set security fields
+        document.getElementById('fingerprint').value = generateFingerprint();
+        document.getElementById('timestamp').value = Date.now();
+        
+        // Initialize star rating
+        const stars = document.querySelectorAll('.star');
+        const ratingInput = document.getElementById('ratingValue');
+        let currentRating = 0;
+        let hoverRating = 0;
+        
+        // Function to update star display
+        function updateStars() {
+            const rating = hoverRating || currentRating;
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
         }
+        
+        // Set up star event listeners
+        stars.forEach(star => {
+            star.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentRating = parseInt(this.getAttribute('data-value'));
+                ratingInput.value = currentRating;
+                updateStars();
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                hoverRating = parseInt(this.getAttribute('data-value'));
+                updateStars();
+            });
+            
+            star.addEventListener('mouseleave', function() {
+                hoverRating = 0;
+                updateStars();
+            });
+        });
 
-        // Initialize the form
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set security fields
-            document.getElementById('fingerprint').value = generateFingerprint();
-            document.getElementById('timestamp').value = Date.now();
+        // Form submission
+        const form = document.getElementById('feedbackForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const toast = document.getElementById('toast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            // Initialize star rating
-            const stars = document.querySelectorAll('.star');
-            const ratingInput = document.getElementById('ratingValue');
-            let currentRating = 0;
-            let hoverRating = 0;
-            
-            // Function to update star display
-            function updateStars() {
-                const rating = hoverRating || currentRating;
-                stars.forEach((star, index) => {
-                    star.classList.toggle('active', index < rating);
-                    star.setAttribute('aria-checked', index < rating);
-                });
+            // Validate form
+            if (!form.checkValidity()) {
+                showToast('Please fill all required fields', 'error');
+                return;
             }
             
-            // Set up star event listeners
-            stars.forEach(star => {
-                star.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    currentRating = parseInt(this.getAttribute('data-value'));
-                    ratingInput.value = currentRating;
-                    updateStars();
-                });
+            if (currentRating === 0) {
+                showToast('Please select a rating', 'warning');
+                return;
+            }
+            
+            // Prepare data
+            const formData = new FormData(form);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                message: formData.get('message'),
+                rating: currentRating,
+                fingerprint: formData.get('fingerprint'),
+                timestamp: formData.get('timestamp'),
+                key: formData.get('key'),
+                ip: 'client-' + generateFingerprint()
+            };
+            
+            // Update button state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            
+            try {
+                // Important: Add /dev to the URL for testing, remove for production
+                const scriptUrl = 'https://script.google.com/macros/s/AKfycbxqi4I-tudcXFoFqUX8QAWPKlDaXTWOW9NXOUVU6ohp4294twchNc5MuK5ZtIzUGk6J/exec';
                 
-                star.addEventListener('mouseenter', function() {
-                    hoverRating = parseInt(this.getAttribute('data-value'));
-                    updateStars();
-                });
+                // Add timestamp to prevent caching
+                const urlWithCacheBust = `${scriptUrl}?t=${Date.now()}`;
                 
-                star.addEventListener('mouseleave', function() {
-                    hoverRating = 0;
-                    updateStars();
+                const response = await fetch(urlWithCacheBust, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(data),
+                    redirect: 'follow' // Important for Google Apps Script
                 });
 
-                // Keyboard accessibility
-                star.addEventListener('keydown', function(e) {
-                    if (['Enter', 'Space'].includes(e.code)) {
-                        e.preventDefault();
-                        currentRating = parseInt(this.getAttribute('data-value'));
-                        ratingInput.value = currentRating;
-                        updateStars();
-                    }
-                });
-            });
-
-            // Form submission
-            const form = document.getElementById('feedbackForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const toast = document.getElementById('toast');
-            const toastIcon = document.getElementById('toastIcon');
-            const toastMessage = document.getElementById('toastMessage');
-            
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+                // Handle redirects properly
+                const result = await response.json();
                 
-                // Validate form
-                if (!form.checkValidity()) {
-                    showToast('Please fill all required fields', 'error');
-                    return;
+                if (result.status === 200) {
+                    showToast(result.message || 'Feedback submitted successfully!', 'success');
+                    form.reset();
+                    currentRating = 0;
+                    ratingInput.value = 0;
+                    updateStars();
+                } else {
+                    showToast(result.message || 'Submission failed. Please try again.', 'error');
                 }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showToast('Failed to connect to server. Please check your internet connection and try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
                 
-                // Validate email
-                const email = form.email.value;
-                if (!isValidEmail(email)) {
-                    showToast('Please enter a valid email address', 'error');
-                    return;
-                }
-                
-                if (currentRating === 0) {
-                    showToast('Please select a rating', 'warning');
-                    return;
-                }
-                
-                // Prepare data
-                const formData = new FormData(form);
-                const data = {
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    message: formData.get('message'),
-                    rating: currentRating,
-                    fingerprint: formData.get('fingerprint'),
-                    timestamp: formData.get('timestamp'),
-                    key: formData.get('key'),
-                    ip: 'client-' + generateFingerprint()
-                };
-                
-                // Update button state
-                submitBtn.disabled = true;
-                submitBtn.setAttribute('aria-busy', 'true');
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-                
-                try {
-                    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyeeNa-Zn9Bt9iMZ1XIatDrJE_ofzMPIjCa5jpgb6nnAYPuARwgCREPssa3sfy_PLYd/exec';
-                    
-                    const response = await fetch(scriptUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    
-                    const result = await response.json();
-                    
-                    if (result.status === 200) {
-                        showToast(result.message || 'Feedback submitted successfully!', 'success');
-                        form.reset();
-                        currentRating = 0;
-                        ratingInput.value = 0;
-                        updateStars();
-                    } else {
-                        throw new Error(result.message || 'Submission failed');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    showToast(error.message || 'Connection error. Please try again.', 'error');
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.setAttribute('aria-busy', 'false');
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback';
-                    
-                    // Update security fields
-                    document.getElementById('fingerprint').value = generateFingerprint();
-                    document.getElementById('timestamp').value = Date.now();
-                }
-            });
-            
-            function showToast(message, type) {
-                toast.className = `toast ${type}`;
-                toastMessage.textContent = message;
-                toast.setAttribute('role', 'alert');
-                toast.setAttribute('aria-live', 'assertive');
-                
-                // Update icon
-                const icons = {
-                    success: 'fa-check-circle',
-                    error: 'fa-exclamation-circle',
-                    warning: 'fa-exclamation-triangle'
-                };
-                toastIcon.className = `fas ${icons[type]}`;
-                
-                toast.classList.add('show');
-                
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 5000);
+                // Update security fields for next submission
+                document.getElementById('fingerprint').value = generateFingerprint();
+                document.getElementById('timestamp').value = Date.now();
             }
         });
-    </script>
+        
+        function showToast(message, type) {
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            
+            // Update icon
+            switch(type) {
+                case 'success':
+                    toastIcon.className = 'fas fa-check-circle';
+                    break;
+                case 'error':
+                    toastIcon.className = 'fas fa-exclamation-circle';
+                    break;
+                case 'warning':
+                    toastIcon.className = 'fas fa-exclamation-triangle';
+                    break;
+            }
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+    });
+</script>
 </body>
 </html>
