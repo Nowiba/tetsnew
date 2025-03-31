@@ -3,36 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Send Message to Telegram</title>
+  <title>Rate Us!</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
+    .stars { display: flex; justify-content: center; margin: 20px 0; }
+    .star { font-size: 30px; cursor: pointer; color: #ddd; }
+    .star.active { color: #ffcc00; }
+    textarea { width: 100%; padding: 10px; margin: 10px 0; }
+    button { background: #0078d7; color: white; border: none; padding: 10px 20px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <h1>Send a Message to Telegram</h1>
-  <form id="messageForm">
-    <label for="message">Enter your message:</label>
-    <input type="text" id="message" name="message" placeholder="Type your message here" required>
-    <button type="submit">Send Message</button>
-  </form>
+  <h1>Rate Your Experience</h1>
+  <div class="stars">
+    <span class="star" data-rating="1">★</span>
+    <span class="star" data-rating="2">★</span>
+    <span class="star" data-rating="3">★</span>
+    <span class="star" data-rating="4">★</span>
+    <span class="star" data-rating="5">★</span>
+  </div>
+  <textarea id="feedback" placeholder="Optional feedback..."></textarea>
+  <button id="submit">Submit Rating</button>
 
   <script>
-    // Add event listener to form submission
-    const form = document.getElementById('messageForm');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    let selectedRating = 0;
+    const stars = document.querySelectorAll('.star');
+    const feedback = document.getElementById('feedback');
+    const submitBtn = document.getElementById('submit');
 
-      // Collect form data
-      const formData = new FormData(form);
+    // Star selection logic
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = star.dataset.rating;
+        stars.forEach(s => s.classList.toggle('active', s.dataset.rating <= selectedRating));
+      });
+    });
 
-      // Send data to Cloudflare Worker (replace with your Worker URL)
-      const response = await fetch('https://testftw.mohamedlabido2646.workers.dev/', {
+    // Send data to Cloudflare Worker
+    submitBtn.addEventListener('click', async () => {
+      if (selectedRating === 0) {
+        alert('Please select a rating!');
+        return;
+      }
+
+      const response = await fetch('https://your-worker.your-username.workers.dev', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: selectedRating,
+          feedback: feedback.value,
+          userAgent: navigator.userAgent // Optional: Detect browser/device
+        }),
       });
 
-      // Handle response from Cloudflare Worker
       if (response.ok) {
-        alert('Message sent successfully!');
+        alert('Thanks for your feedback!');
       } else {
-        alert('Failed to send message.');
+        alert('Error sending feedback. Try again later.');
       }
     });
   </script>
