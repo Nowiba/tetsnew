@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Feedback Form</title>
+    <title>Feedback Form with Star Rating</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -15,8 +15,9 @@
             --dark: #212529;
             --success: #4bb543;
             --error: #ff3333;
-            --star: #FFD700;
+            --star-active: #FFD700;
             --star-inactive: #ddd;
+            --warning: #f0ad4e;
         }
 
         * {
@@ -94,7 +95,7 @@
             font-weight: 500;
         }
 
-        .stars {
+        .stars-container {
             display: flex;
             justify-content: space-between;
             margin-bottom: 5px;
@@ -114,7 +115,7 @@
         }
 
         .star.active {
-            color: var(--star);
+            color: var(--star-active);
             transform: scale(1.1);
             text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
         }
@@ -177,7 +178,7 @@
             font-weight: 500;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             z-index: 1000;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
             max-width: calc(100% - 40px);
             width: max-content;
             display: flex;
@@ -212,10 +213,6 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-        }
-
-        .hidden {
-            display: none !important;
         }
 
         @media (max-width: 480px) {
@@ -265,12 +262,12 @@
             
             <div class="rating-container">
                 <div class="rating-title">How would you rate our service?</div>
-                <div class="stars" id="serviceRating">
-                    <i class="fas fa-star" data-value="1"></i>
-                    <i class="fas fa-star" data-value="2"></i>
-                    <i class="fas fa-star" data-value="3"></i>
-                    <i class="fas fa-star" data-value="4"></i>
-                    <i class="fas fa-star" data-value="5"></i>
+                <div class="stars-container" id="starRating">
+                    <i class="fas fa-star star" data-value="1"></i>
+                    <i class="fas fa-star star" data-value="2"></i>
+                    <i class="fas fa-star star" data-value="3"></i>
+                    <i class="fas fa-star star" data-value="4"></i>
+                    <i class="fas fa-star star" data-value="5"></i>
                 </div>
             </div>
             
@@ -278,6 +275,7 @@
             <input type="hidden" id="fingerprint" name="fingerprint">
             <input type="hidden" id="timestamp" name="timestamp">
             <input type="hidden" id="secretKey" name="key" value="UBIbibbj497d7987QDQDQJIza7dazcss616cxc89efzgfre982vcbhg65az84">
+            <input type="hidden" id="ratingValue" name="rating" value="0">
             
             <button type="submit" class="submit-btn" id="submitBtn">
                 <i class="fas fa-paper-plane"></i> Submit Feedback
@@ -317,41 +315,42 @@
             
             // Initialize star rating
             const stars = document.querySelectorAll('.star');
-            let selectedRating = 0;
+            const ratingInput = document.getElementById('ratingValue');
+            let currentRating = 0;
+            let hoverRating = 0;
             
+            // Function to update star display
+            function updateStars() {
+                const rating = hoverRating || currentRating;
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.add('active');
+                    } else {
+                        star.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Set up star event listeners
             stars.forEach(star => {
                 // Click handler
-                star.addEventListener('click', function() {
-                    const value = parseInt(this.getAttribute('data-value'));
-                    selectedRating = value;
-                    
-                    // Update stars
-                    stars.forEach((s, index) => {
-                        if (index < value) {
-                            s.classList.add('active');
-                        } else {
-                            s.classList.remove('active');
-                        }
-                    });
+                star.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    currentRating = parseInt(this.getAttribute('data-value'));
+                    ratingInput.value = currentRating;
+                    updateStars();
                 });
                 
-                // Hover effects
+                // Mouse enter handler
                 star.addEventListener('mouseenter', function() {
-                    const value = parseInt(this.getAttribute('data-value'));
-                    
-                    stars.forEach((s, index) => {
-                        if (index < value && !s.classList.contains('active')) {
-                            s.style.color = '#FFEB3B';
-                        }
-                    });
+                    hoverRating = parseInt(this.getAttribute('data-value'));
+                    updateStars();
                 });
                 
+                // Mouse leave handler
                 star.addEventListener('mouseleave', function() {
-                    stars.forEach((s, index) => {
-                        if (!s.classList.contains('active')) {
-                            s.style.color = 'var(--star-inactive)';
-                        }
-                    });
+                    hoverRating = 0;
+                    updateStars();
                 });
             });
 
@@ -371,7 +370,7 @@
                     return;
                 }
                 
-                if (selectedRating === 0) {
+                if (currentRating === 0) {
                     showToast('Please select a rating', 'warning');
                     return;
                 }
@@ -382,7 +381,7 @@
                     name: formData.get('name'),
                     email: formData.get('email'),
                     message: formData.get('message'),
-                    rating: selectedRating,
+                    rating: currentRating,
                     fingerprint: formData.get('fingerprint'),
                     timestamp: formData.get('timestamp'),
                     key: formData.get('key'),
@@ -395,7 +394,7 @@
                 
                 try {
                     // Replace with your Google Apps Script URL
-                    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwL8xrGRHaKp93M7bBsZWWNo4RKmhSZEyk9eiGo4ej8nofrAc-YAVdCFZy4_m2jn0Yp/exec';
+                    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyeeNa-Zn9Bt9iMZ1XIatDrJE_ofzMPIjCa5jpgb6nnAYPuARwgCREPssa3sfy_PLYd/exec';
                     
                     // Send data
                     const response = await fetch(scriptUrl, {
@@ -412,8 +411,9 @@
                     if (result.status === 200) {
                         showToast(result.message || 'Feedback submitted successfully!', 'success');
                         form.reset();
-                        stars.forEach(star => star.classList.remove('active'));
-                        selectedRating = 0;
+                        currentRating = 0;
+                        ratingInput.value = 0;
+                        updateStars();
                     } else {
                         showToast(result.message || 'Submission failed', 'error');
                     }
@@ -456,6 +456,9 @@
                 }, 5000);
             }
         });
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
