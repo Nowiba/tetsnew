@@ -1,334 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feedback Form</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3a0ca3;
-            --accent: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --success: #4bb543;
-            --error: #ff3333;
-            --star: #FFD700;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domino Game</title>
+  <style>
+    /* CSS */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f4f4f9;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    h1 {
+      margin: 20px 0;
+      color: #333;
+    }
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fa;
-            color: var(--dark);
-            line-height: 1.6;
-            padding: 20px;
-        }
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+    }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 25px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
+    #play-area {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+      min-height: 100px;
+      border: 2px solid #ccc;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 8px;
+    }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-            color: var(--primary);
-        }
+    .tile {
+      width: 50px;
+      height: 80px;
+      background-color: #fff;
+      border: 2px solid #333;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .tile:hover {
+      background-color: #e0e0ff;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+    #player-hand {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
 
-        input, textarea, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
+    #boneyard {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #eaeaea;
+      border: 2px dashed #aaa;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
+    #boneyard:hover {
+      background-color: #dcdcdc;
+    }
 
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .rating-container {
-            margin: 20px 0;
-        }
-
-        .rating-title {
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        .stars {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
-        .star {
-            cursor: pointer;
-            color: #ddd;
-            font-size: 28px;
-            transition: all 0.2s;
-        }
-
-        .star:hover, .star.active {
-            color: var(--star);
-            transform: scale(1.2);
-        }
-
-        .star.active {
-            text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .submit-btn:hover {
-            background-color: var(--secondary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(150%);
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            transition: transform 0.3s;
-            max-width: 90%;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .toast.success {
-            background-color: var(--success);
-        }
-
-        .toast.error {
-            background-color: var(--error);
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px 15px;
-            }
-            
-            .star {
-                font-size: 24px;
-            }
-        }
-    </style>
+    #scoreboard {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Feedback Form</h1>
-        
-        <form id="feedbackForm">
-            <div class="form-group">
-                <label for="name">Your Name</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="email">Your Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="message">Your Feedback</label>
-                <textarea id="message" name="message" required></textarea>
-            </div>
-            
-            <div class="rating-container">
-                <div class="rating-title">How would you rate our service?</div>
-                <div class="stars" id="serviceRating">
-                    <i class="fas fa-star" data-value="1"></i>
-                    <i class="fas fa-star" data-value="2"></i>
-                    <i class="fas fa-star" data-value="3"></i>
-                    <i class="fas fa-star" data-value="4"></i>
-                    <i class="fas fa-star" data-value="5"></i>
-                </div>
-            </div>
-            
-            <button type="submit" class="submit-btn">
-                <i class="fas fa-paper-plane"></i> Submit Feedback
-            </button>
-        </form>
-    </div>
+  <!-- HTML -->
+  <h1>Domino Game</h1>
+  <div id="game-container">
+    <div id="play-area"></div>
+    <div id="player-hand"></div>
+    <div id="boneyard">Draw Tile</div>
+    <div id="scoreboard">Your Score: 0 | Bot Score: 0</div>
+  </div>
 
-    <div class="toast" id="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">Feedback submitted successfully!</span>
-    </div>
+  <script>
+    // JavaScript
+    const tiles = [];
+    for (let i = 0; i <= 6; i++) {
+      for (let j = i; j <= 6; j++) {
+        tiles.push([i, j]);
+      }
+    }
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Star rating functionality
-            const stars = document.querySelectorAll('.star');
-            let selectedRating = 0;
-            
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const value = parseInt(this.getAttribute('data-value'));
-                    selectedRating = value;
-                    
-                    // Update stars display
-                    stars.forEach((s, index) => {
-                        if (index < value) {
-                            s.classList.add('active');
-                        } else {
-                            s.classList.remove('active');
-                        }
-                    });
-                });
-                
-                // Hover effects
-                star.addEventListener('mouseenter', function() {
-                    const value = parseInt(this.getAttribute('data-value'));
-                    
-                    stars.forEach((s, index) => {
-                        if (index < value && !s.classList.contains('active')) {
-                            s.style.color = '#FFEB3B';
-                        }
-                    });
-                });
-                
-                star.addEventListener('mouseleave', function() {
-                    stars.forEach((s, index) => {
-                        if (!s.classList.contains('active')) {
-                            s.style.color = '#ddd';
-                        }
-                    });
-                });
-            });
+    let playerHand = [];
+    let botHand = [];
+    let boneyard = [...tiles];
+    let playArea = [];
+    let currentPlayer = "player"; // "player" or "bot"
+    let scores = { player: 0, bot: 0 };
 
-            // Form submission
-            const form = document.getElementById('feedbackForm');
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                // Get form data
-                const formData = new FormData(form);
-                const data = {
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    message: formData.get('message'),
-                    rating: selectedRating || 0,
-                    timestamp: new Date().toISOString()
-                };
-                
-                // Show loading state
-                const submitBtn = form.querySelector('.submit-btn');
-                const originalText = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-                submitBtn.disabled = true;
-                
-                // Replace with your Google Apps Script URL
-                const scriptUrl = 'https://script.google.com/macros/s/AKfycbwrwuLgdi8ZrHyvTVL2KeJXoJzjZIaM6qQ4oxnpM9-NVj3ukIhQ-UzZGSDbyljqdYJE/exec';
-                
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(() => {
-                    showToast('Feedback submitted successfully!', 'success');
-                    form.reset();
-                    // Reset stars
-                    stars.forEach(star => star.classList.remove('active'));
-                    selectedRating = 0;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('Failed to submit feedback. Please try again.', 'error');
-                })
-                .finally(() => {
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                });
-            });
-            
-            function showToast(message, type) {
-                toast.className = `toast ${type}`;
-                toastMessage.textContent = message;
-                
-                // Update icon
-                const icon = toast.querySelector('i');
-                icon.className = type === 'success' 
-                    ? 'fas fa-check-circle' 
-                    : 'fas fa-exclamation-circle';
-                
-                toast.classList.add('show');
-                
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 5000);
-            }
-        });
-    </script>
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function dealTiles() {
+      shuffle(boneyard);
+      playerHand = boneyard.splice(0, 7);
+      botHand = boneyard.splice(0, 7);
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("play-area").innerHTML = playArea
+        .map(tile => `<div class="tile">${tile[0]}<hr>${tile[1]}</div>`)
+        .join("");
+
+      document.getElementById("player-hand").innerHTML = playerHand
+        .map(
+          (tile, index) =>
+            `<div class="tile" onclick="playTile(${index})">${tile[0]}<hr>${tile[1]}</div>`
+        )
+        .join("");
+
+      document.getElementById("boneyard").textContent =
+        boneyard.length > 0 ? "Draw Tile" : "Boneyard Empty";
+
+      document.getElementById("scoreboard").textContent = `Your Score: ${scores.player} | Bot Score: ${scores.bot}`;
+    }
+
+    function playTile(index) {
+      if (currentPlayer !== "player") return;
+
+      const tile = playerHand[index];
+      if (canPlayTile(tile)) {
+        playArea.push(tile);
+        playerHand.splice(index, 1);
+        scores.player += tile[0] + tile[1];
+        currentPlayer = "bot";
+        setTimeout(botTurn, 500); // Simulate bot thinking
+      } else {
+        alert("Invalid move! Choose another tile.");
+      }
+
+      updateUI();
+      checkGameOver();
+    }
+
+    function canPlayTile(tile) {
+      if (playArea.length === 0) return true;
+      const lastTile = playArea[playArea.length - 1];
+      return tile[0] === lastTile[1] || tile[1] === lastTile[0];
+    }
+
+    function botTurn() {
+      for (let i = 0; i < botHand.length; i++) {
+        if (canPlayTile(botHand[i])) {
+          const tile = botHand.splice(i, 1)[0];
+          playArea.push(tile);
+          scores.bot += tile[0] + tile[1];
+          currentPlayer = "player";
+          updateUI();
+          checkGameOver();
+          return;
+        }
+      }
+
+      // Bot draws from boneyard
+      if (boneyard.length > 0) {
+        botHand.push(boneyard.pop());
+      }
+
+      currentPlayer = "player";
+      updateUI();
+      checkGameOver();
+    }
+
+    function drawTile() {
+      if (boneyard.length > 0 && currentPlayer === "player") {
+        playerHand.push(boneyard.pop());
+        updateUI();
+      }
+    }
+
+    function checkGameOver() {
+      if (playerHand.length === 0 || botHand.length === 0 || boneyard.length === 0) {
+        alert(`Game Over! Final Scores:\nYou: ${scores.player}\nBot: ${scores.bot}`);
+        resetGame();
+      }
+    }
+
+    function resetGame() {
+      playerHand = [];
+      botHand = [];
+      boneyard = [...tiles];
+      playArea = [];
+      scores = { player: 0, bot: 0 };
+      currentPlayer = "player";
+      dealTiles();
+    }
+
+    document.getElementById("boneyard").addEventListener("click", drawTile);
+
+    // Start the game
+    dealTiles();
+  </script>
 </body>
 </html>
